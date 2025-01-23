@@ -1,127 +1,176 @@
-import java.util.*;
-public class TicTacToe{
-    static HashSet<Integer> user_set=new HashSet<Integer>();
-    static HashSet<Integer> Pc_set=new HashSet<Integer>();
-    public static void main(String[] args){
-        Scanner Sc=new Scanner(System.in);
-        char[][] ch={
-              {' ','|',' ','|',' '},
-              {'-','|','-','|','-'},
-              {' ','|',' ','|',' '},
-              {'-','|','-','|','-'},
-              {' ','|',' ','|',' '}
-      };
-       print_board(ch);
-       while(true){
-           System.out.print("Enter a number between 1-9: ");
-           int user_position=Sc.nextInt();
-           while(user_set.contains(user_position)||Pc_set.contains(user_position)){
-               System.out.println();
-               System.out.print("Retry a number between 1-9: ");
-                user_position=Sc.nextInt();
-           }
-           gaming(ch,user_position,"You");
-            String Result=check();
-            if(Result.length()>0) {
-                System.out.println(Result);
-                break;
+import java.awt.*;
+import java.awt.event.*;
+
+public class TicTacToe extends Frame implements ActionListener {
+    private final Button[][] buttons = new Button[3][3];
+    private final char[][] board = new char[3][3];
+    private boolean playerTurn = true; // true for Player (X), false for Computer (O)
+
+    public TicTacToe() {
+        setTitle("Tic-Tac-Toe ");
+        setSize(400, 400);
+        setLayout(new GridLayout(3, 3));
+
+        // Initialize buttons and board
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                buttons[i][j] = new Button("");
+                buttons[i][j].setFont(new Font("Arial", Font.BOLD, 60));
+                buttons[i][j].addActionListener(this);
+                add(buttons[i][j]);
+                board[i][j] = ' ';
             }
-           int Pc_position=random_generator();
-           while(user_set.contains(Pc_position)||Pc_set.contains(Pc_position)){
-               Pc_position=random_generator();
-           }
-           gaming(ch,Pc_position,"Pc");
-           Result=check();
-           if(Result.length()>0) {
-               System.out.println(Result);
-               break;
-           }
-       }
-    }
-    static void print_board(char[][] board){
-        for(char[] ele:board){
-         for(char x:ele) System.out.print(x+" ");
-         System.out.println();
-        }
-        System.out.println();
-    }
-    static void gaming(char[][] board,int position,String user){
-        char symbl='X';
-        if(user.equals("You")){
-             symbl='X';
-            user_set.add(position);
-        }
-        else if(user.equals("Pc")){
-            symbl='O';
-            Pc_set.add(position);
-        }
-        else System.out.print("Invalid");
-        switch(position){
-            case 1:
-                board[0][0]=symbl;
-                break;
-            case 2:
-                board[0][2]=symbl;
-                break;
-            case 3:
-                board[0][4]=symbl;
-                break;
-            case 4:
-                board[2][0]=symbl;
-                break;
-            case 5:
-                board[2][2]=symbl;
-                break;
-            case 6:
-                board[2][4]=symbl;
-                break;
-            case 7:
-                board[4][0]=symbl;
-                break;
-            case 8:
-                board[4][2]=symbl;
-                break;
-            case 9:
-                board[4][4]=symbl;
-                break;
-            default:
-                System.out.print("Invalid Input\n");
-        }
-        print_board(board);
-    }
-    static int random_generator(){
-        int upper=9;
-        int lower=1;
-        int range=upper-lower+2;
-        int ans=(int)(Math.random()*range)+lower;
-        return ans;
-    }
-    static String check(){
-        HashSet<Integer> r1 = new HashSet<>(Arrays.asList(1, 2, 3));
-        HashSet<Integer> r2 = new HashSet<>(Arrays.asList(4, 5, 6));
-        HashSet<Integer> r3 = new HashSet<>(Arrays.asList(7, 8, 9));
-        HashSet<Integer> r4 = new HashSet<>(Arrays.asList(1, 4, 7));
-        HashSet<Integer> r5 = new HashSet<>(Arrays.asList(2, 5, 8));
-        HashSet<Integer> r6 = new HashSet<>(Arrays.asList(3, 6, 9));
-        HashSet<Integer> r7 = new HashSet<>(Arrays.asList(1, 5, 9));
-        HashSet<Integer> r8 = new HashSet<>(Arrays.asList(3, 5, 7));
-
-        HashSet<HashSet<Integer>> winningSets = new HashSet<>();
-        winningSets.add(r1); winningSets.add(r2); winningSets.add(r3);
-        winningSets.add(r4); winningSets.add(r5); winningSets.add(r6);
-        winningSets.add(r7); winningSets.add(r8);
-
-        for (HashSet<Integer> c : winningSets) {
-            if (user_set.containsAll(c))
-                return "You won";
-            else if (Pc_set.containsAll(c))
-                return "You lost";
         }
 
-        if (user_set.size() + Pc_set.size() == 9)
-            return "Draw";
+        setVisible(true);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+        });
+    }
 
-        return "";
+    public static void main(String[] args) {
+        new TicTacToe();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Button clickedButton = (Button) e.getSource();
+
+        if (playerTurn) {
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (clickedButton == buttons[i][j] && board[i][j] == ' ') {
+                        board[i][j] = 'X';
+                        buttons[i][j].setLabel("X");
+                        playerTurn = false;
+
+                        if (isWinner('X')) {
+                            showResult("Congratulations! You win!");
+                            return;
+                        } else if (isBoardFull()) {
+                            showResult("It's a draw!");
+                            return;
+                        }
+
+                        computerMove(); // Computer's turn
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    private void computerMove() {
+        int[] bestMove = findBestMove();
+        board[bestMove[0]][bestMove[1]] = 'O';
+        buttons[bestMove[0]][bestMove[1]].setLabel("O");
+
+        if (isWinner('O')) {
+            showResult("Computer wins! Better luck next time.");
+        } else if (isBoardFull()) {
+            showResult("It's a draw!");
+        }
+
+        playerTurn = true; // Switch back to player's turn
+    }
+
+    // Check if the board is full
+    private boolean isBoardFull() {
+        for (char[] row : board) {
+            for (char cell : row) {
+                if (cell == ' ') return false;
+            }
+        }
+        return true;
+    }
+
+    // Check if a player has won
+    private boolean isWinner(char player) {
+        for (int i = 0; i < 3; i++) {
+            if (board[i][0] == player && board[i][1] == player && board[i][2] == player) return true;
+            if (board[0][i] == player && board[1][i] == player && board[2][i] == player) return true;
+        }
+        return (board[0][0] == player && board[1][1] == player && board[2][2] == player) ||
+                (board[0][2] == player && board[1][1] == player && board[2][0] == player);
+    }
+
+    // Show result and disable the board
+    private void showResult(String message) {
+        for (Button[] row : buttons) {
+            for (Button button : row) {
+                button.setEnabled(false);
+            }
+        }
+        new DialogResult(this, message);
+    }
+
+    // Find the best move using Minimax algorithm
+    private int[] findBestMove() {
+        int bestScore = Integer.MIN_VALUE;
+        int[] bestMove = {-1, -1};
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (board[i][j] == ' ') {
+                    board[i][j] = 'O'; // Simulate the move
+                    int score = minimax(0, false);
+                    board[i][j] = ' '; // Undo the move
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = new int[]{i, j};
+                    }
+                }
+            }
+        }
+        return bestMove;
+    }
+
+    // Minimax algorithm
+    private int minimax(int depth, boolean isMaximizing) {
+        if (isWinner('O')) return 10 - depth; // Favor faster wins
+        if (isWinner('X')) return depth - 10; // Favor slower losses
+        if (isBoardFull()) return 0; // Draw
+
+        if (isMaximizing) {
+            int bestScore = Integer.MIN_VALUE;
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (board[i][j] == ' ') {
+                        board[i][j] = 'O';
+                        bestScore = Math.max(bestScore, minimax(depth + 1, false));
+                        board[i][j] = ' ';
+                    }
+                }
+            }
+            return bestScore;
+        } else {
+            int bestScore = Integer.MAX_VALUE;
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (board[i][j] == ' ') {
+                        board[i][j] = 'X';
+                        bestScore = Math.min(bestScore, minimax(depth + 1, true));
+                        board[i][j] = ' ';
+                    }
+                }
+            }
+            return bestScore;
+        }
     }
 }
 
+// Helper class for showing the result in a dialog
+class DialogResult extends Dialog {
+    public DialogResult(Frame owner, String message) {
+        super(owner, "Game Over", true);
+        setLayout(new FlowLayout());
+        add(new Label(message));
+        Button ok = new Button("OK");
+        ok.addActionListener(e -> System.exit(0));
+        add(ok);
+        setSize(200, 100);
+        setVisible(true);
+    }
+}
